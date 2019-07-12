@@ -12,12 +12,16 @@ import axios from 'axios'
 import qs from 'qs'
 import 'lib-flexible'
 import common from './common'
+import VueAwesomeSwiper from 'vue-awesome-swiper'
+import 'swiper/dist/css/swiper.css'
+import './filter'
 
 Vue.config.productionTip = false
 Vue.use(MintUI)
 fastclick.attach(document.body) // body内去除300毫秒延迟
 Vue.prototype.$axios = axios
 Vue.prototype.$qs = qs
+Vue.use(VueAwesomeSwiper)
 
 for(let i in common){
   Vue.component(i,common[i])

@@ -2,7 +2,7 @@
   <div class='cart'>
     <div class="top">
       <h2>购物车</h2>
-      <i class="iconfont icon-left back"></i>
+      <i class="iconfont icon-left back" @click="$router.go(-1)"></i>
     </div>
     <div class="noneShop" v-if="!islogin">
       <div>
@@ -12,34 +12,22 @@
     </div>
     <div class="shoped" v-if='islogin'>
       <ul>
-        <li>
+        <li v-for="(item,index) in list" :key='index'>
           <div class="title">
             <i class="icon-mendian iconfont shopIcon"></i>
             <span>杭州保税区仓</span>
           </div>
           <div class="main">
-            <div class="chek"><input type="checkbox"></div>
+            <div class="chek" v-show='!edit'><input type="checkbox"></div>
             <div class="img"><img src="" alt=""></div>
             <div class="desc">
-              <h2>ChildLife/童年时光婴幼童年时光婴幼童年时光婴幼</h2>
-              <i @click='num-- && num>0'>-</i><i class="center">{{num}}</i><i @click='num++'>+</i>
+              <h2>{{item.name}}</h2>
+              <button @click='num-- && num>0'>-</button><i class="center">{{item.num}}</i><button @click='num++'>+</button>
             </div>
-            <div class="price">￥118</div>
-          </div>
-        </li>
-        <li>
-          <div class="title">
-            <i class="icon-mendian iconfont shopIcon"></i>
-            <span>杭州保税区仓</span>
-          </div>
-          <div class="main">
-            <div class="chek"><input type="checkbox"></div>
-            <div class="img"><img src="" alt=""></div>
-            <div class="desc">
-              <h2>ChildLife/童年时光婴幼童年时光婴幼童年时光婴幼</h2>
-              <i @click='num-- && num>0'>-</i><i class="center">{{num}}</i><i @click='num++'>+</i>
-            </div>
-            <div class="price">￥118</div>
+            <div class="price">￥{{item.sprice*item.num}}</div>
+            <transition enter-active-class="animated fadeInRight faster" leave-active-class="animated fadeOutRight faster">
+              <div class="btn" v-show='edit'>删除</div>
+            </transition>
           </div>
         </li>
       </ul>
@@ -49,11 +37,11 @@
           <p>全选</p>
         </div>
         <div class="chekAll">
-          <input type="checkbox" name="edit" id="">
+          <input type="checkbox" name="edit" id="" v-model='edit'>
           <p>编辑</p>
         </div>
         <div class="priceAll">
-          <p>合计:118.00</p>
+          <p>合计:{{priceAll}}.00</p>
           <p>(不含运费)</p>
         </div>
         <button>去结算</button>
@@ -67,7 +55,20 @@ export default {
   data () {
     return {
       islogin: true,
-      num: 1
+      edit: false,
+      list: '',
+      priceAll: 0
+    }
+  },
+  mounted () {
+    if(localStorage.list){
+      this.list = JSON.parse(localStorage.list)
+      this.islogin = true;
+      this.list.forEach((item,index)=>{
+        this.priceAll += item.num*item.sprice
+      })
+    } else {
+      this.islogin = false;
     }
   }
 }
@@ -114,6 +115,7 @@ export default {
     position fixed
     bottom 1.33rem
     display flex
+    background #fff
     .chekAll{
       width 1.68rem
       box-sizing border-box
@@ -182,6 +184,7 @@ export default {
       .main{
         display flex
         height 2.9rem
+        transition .5s
         .chek{
           width 1.11rem
           padding-top .77rem
@@ -218,7 +221,7 @@ export default {
             -webkit-line-clamp:2;    //超出两行文本变点状;
             overflow:hidden;        //超出内容隐藏;
           }
-          i{
+          button,i{
             width 1rem
             line-height .55rem
             border .04rem solid #ccc
@@ -226,6 +229,8 @@ export default {
             text-align center
             font-size 22px
             display inline-block
+            background #fff
+            padding 3px 0
           }
           .center{
             border-left none;
@@ -235,6 +240,16 @@ export default {
         .price{
           padding .83rem 0 0 .2rem
           font-size 20px
+        }
+        .btn{
+          width 1.31rem
+          height 100%
+          background #f90
+          color #fff
+          margin-left .33rem
+          font-size 20px
+          display grid
+          place-items center
         }
       }
     }

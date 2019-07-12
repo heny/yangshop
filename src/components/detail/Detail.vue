@@ -2,14 +2,20 @@
   <div class='Detail'>
     <div class="top">
       <div class="nav">
-        <div class="back"><i class="iconfont icon-left"></i></div>
-        <div class="shops"><i class="iconfont icon-Cart"></i></div>
+        <div class="back"><i class="iconfont icon-left" @click='$router.go(-1)'></i></div>
+        <div class="shops"><i class="iconfont icon-Cart" @click='$router.push("/home/cart")'></i></div>
         <div class="dot"><i class="iconfont icon-more2"></i></div>
       </div>
+      <swiper :options="swiperOption">
+        <swiper-slide v-for="(item,index) in list.swiperImgArr" :key='index'>
+          <img :src="item" alt="">
+        </swiper-slide>
+        <div class="swiper-pagination" slot="pagination"></div>
+      </swiper>
     </div>
     <div class="title">
       <div class="title-top">
-        <h2>Aptamil 德国爱他美  婴儿奶粉  2段800/克 3罐装  6-10月</h2>
+        <h2>{{list.name}}</h2>
         <div class="like">
           <i :class="['iconfont',{'icon-start':!like},{'icon-start1':like}]" @click='like=!like'></i>
           <h4>收藏</h4>
@@ -17,62 +23,76 @@
       </div>
       <div class="title-bot">
         <div class="price">
-          <h4 class="hotprice">￥445.00</h4>
-          <del class="oriprice">￥998.00</del>
+          <h4 class="hotprice">￥{{list.reduct_price}}.00</h4>
+          <del class="oriprice">￥{{list.original_price}}.00</del>
         </div>
         <div class="discount">
           <ul class="discount-top clearfix">
-            <li>6.5折</li>
-            <li>包邮</li>
+            <li>{{list.allowance | allow}}</li>
+            <li>{{list.isFreeShip ? '包邮' : '含运费'}}</li>
           </ul>
           <ul class="discount-bot">
-            <li>正品货源</li>
-            <li>一件代发</li>
-            <li>全球直邮</li>
-            <li>售后无忧</li>
+            <li v-for='(item,index) in list.describe' :key='index'>{{item}}</li>
           </ul>
         </div>
       </div>
     </div>
     <div class="tab">
-      <router-link to="" class="actives">商品详情</router-link>
-      <router-link to="">买家口碑</router-link>
+      <a href="javascript:;" :class="{'actives':deta}" @click='deta=true'>商品详情</a>
+      <a href="javascript:;" :class="{'actives':!deta}" @click='deta=false'>买家口碑</a>
     </div>
-    <router-view></router-view>
+    <!-- 详情图片 -->
+    <div class="shopdetail" v-show='deta'>
+      <img src="../../assets/image/detail/xiangqing.png" alt="">
+    </div>
+    <!-- 商家口碑 -->
+    <div class="koubei" v-show='!deta'>
+      <ul class="nav">
+        <li @click="postName='all'" :class="{'bg':postName=='all'}">全部评价</li>
+        <li @click="postName='good'" :class="{'bg':postName=='good'}">好评</li>
+        <li @click="postName='bad'" :class="{'bg':postName=='bad'}">差评</li>
+        <li @click="postName='postForm'" :class="{'bg':postName=='postForm'}">晒单</li>
+      </ul>
+      <ul class="cont">
+        <li v-for="(item,index) in buylist[postName]" :key='index'>
+          <p class="tit">
+            <b>{{item.buyerName}}</b>
+            <i>{{item.createTime | swichTime}}</i>
+          </p>
+          <ul class="img">
+            <li v-for='(it,index) in item.postImg' :key='index'><img :src="it" alt=""></li>
+          </ul>
+          <p class="postdesc">{{item.postDescribe}}</p>
+          <p class="admindesc">{{item.adminReviews}}</p>
+        </li>
+      </ul>
+    </div>
     <div class="bottoms">
       <div class="bom-price">
-        总价：<i>￥0.00</i>
+        总价：<i>￥{{buy.num!==0 ? list.reduct_price*buy.num : 0}}.00</i>
       </div>
-      <button class="add-shop" @click='sha=true'>加入购物车</button>
-      <button class="fast-buy" @click='sha=true'>立即购买</button>
+      <button class="add-shop" @click='startBuy'>加入购物车</button>
+      <button class="fast-buy" @click='startBuy'>立即购买</button>
     </div>
     <transition enter-active-class='animated fadeInUp faster' leave-active-class='animated fadeOutDown faster'>
       <div class="shadowbom" v-show='sha' @click.self='sha=false'>
         <div class="main">
-          <div class="header"></div>
+          <div class="header"><img :src="list.swiperImgArr[0]" alt="" v-if='list.swiperImgArr'></div>
           <i class="iconfont icon-delete close" @click='sha=false'></i>
           <div class="text">
-            <p style="color:#eb2222">￥445.00</p>
-            <p>库存1333333件</p>
+            <p style="color:#eb2222">￥{{list.reduct_price}}.00</p>
+            <p>库存{{list.total}}件</p>
             <p>请选择商品属性</p>
           </div>
           <div class="chnum clearfix">
             <h3>购买数量</h3>
             <div class="calcs">
-              <button>+</button><i>1</i><button>-</button>
+              <button @click='buy.num--' :disabled='buy.num==0'>-</button><i>{{buy.num}}</i><button @click='buy.num++'>+</button>
             </div>
           </div>
-          <dl class="clearfix">
-            <dt>大小</dt>
-            <dd>1L</dd>
-            <dd>2L</dd>
-            <dd>3L</dd>
-            <dd>4L</dd>
-          </dl>
-          <dl class="clearfix">
-            <dt>年龄</dt>
-            <dd>5岁以下</dd>
-            <dd>3岁以下</dd>
+          <dl class="clearfix" v-for='(item,index) in list.buySelect' :key='index'>
+            <dt>{{item.name}}</dt>
+            <dd v-for='(it,index) in item.list' :key='index' @click='buy.choose=it' :class="{'bg':buy.choose==it}">{{it}}</dd>
           </dl>
         </div>
       </div>
@@ -84,14 +104,126 @@ export default {
   name: 'Detail',
   data () {
     return {
-      like: false,
-      sha: true
+      like: false,  // 收藏按钮
+      sha: false, // 点击购买跳出
+      deta: true,  // tab切换
+      list: '',  // 取到的数组
+      buy: { // 购买选项
+        num: 0, // 添加的数量
+        choose: ''
+      },
+      postName: 'all',  // 评价专用
+      buylist: '',
+      swiperOption: {
+        pagination:{
+          el:'.swiper-pagination',
+          clickable:true
+        }
+      }
     }
   },
-  methods: {}
+  mounted () {
+    let id = this.$route.params.id
+    this.$axios.get('/api/getDetails?pid='+id).then(res => {
+      this.list = res.data.data;
+      this.buylist = this.list.buyerReviews  // 循环评价;
+    })
+  },
+  methods: {
+    add (result) {
+      this.buy.choose = result
+    },
+    startBuy () {
+      this.sha=true
+      if(this.buy.num){
+        let obj = {
+          num: this.buy.num,
+          cid: this.list.cid,
+          name: this.list.name,
+          img: this.list.swiperImgArr[0],
+          sprice: Number(this.list.reduct_price),
+          flag: true
+        }
+        this.$store.commit('setList', obj)
+        // this.$router.push('/home/cart')
+      }
+    }
+  }
 }
 </script>
 <style lang='stylus' scoped>
+.bg{
+  background #f90!important
+}
+.koubei{
+  border-top .04rem solid #eee;
+  padding 0 .4rem
+  background #fff;
+  .cont{
+    border-bottom .04rem solid #eee
+    padding-bottom .27rem
+    .postdesc{
+      font-size 16px
+      color #999
+      line-height 25px
+    }
+    .admindesc{
+      width 100%
+      line-height 20px
+      display flex
+      padding .16rem .13rem
+      box-sizing border-box
+      background #ddd
+      color #666
+      border-radius 8px
+    }
+    .img{
+      display flex
+      li{
+        width 2.01rem
+        height 2.01rem
+        margin-right 10px;
+        img{
+          width 100%
+        }
+      }
+    }
+    .tit{
+      font-size 16px
+      color #f90
+      line-height .83rem
+      display flex
+      justify-content space-between
+      i{
+        color #999
+        font-size 15px
+      }
+    }
+  }
+  .nav{
+    width 100%;
+    height .93rem
+    border-bottom .04rem solid #eee
+    display flex
+    justify-content space-between
+    align-items center
+    li{
+      width 1.8rem
+      height .67rem
+      border-radius 10px
+      background #999
+      font-size 15px
+      display grid
+      place-items center
+      color #fff
+    }
+  }
+}
+.shopdetail{
+  img{
+    width 100vw
+  }
+}
 .shadowbom{
   width 100%
   height calc(100vh - 1.33rem)
@@ -99,6 +231,7 @@ export default {
   position fixed
   top 0
   background rgba(0,0,0,.3)
+  z-index 9
   .main{
     width 100%
     height 7.65rem
@@ -115,7 +248,6 @@ export default {
       }
       dd{
         float left
-        // width 1.6rem
         padding 0 .59rem
         line-height .6rem
         background #ddd
@@ -158,8 +290,11 @@ export default {
       border .09rem solid #eee
       border-radius 5%
       position absolute
+      background #fff
       top -28px
-      background #fdcb6e
+      img{
+        width 100%
+      }
     }
     .text{
       font-size 16px
@@ -260,8 +395,10 @@ export default {
         }
       }
       .discount-bot{
-        display flex
-        justify-content space-around
+        display inline-grid
+        grid-auto-flow column
+        column-gap .27rem
+        place-items start
         li{
           height .4rem
           line-height .4rem
@@ -317,7 +454,12 @@ export default {
 .top{
   width 100%
   height 7.24rem
-  background skyblue
+  .swiper-wrapper{
+    img{
+      width 100vw
+      height 7.24rem
+    }
+  }
   .nav{
     div{
       width .75rem
@@ -328,6 +470,7 @@ export default {
       border-radius 50%
       position absolute
       top .11rem
+      z-index 8
       padding-top 2px
       box-sizing border-box
       color #fff
@@ -345,6 +488,7 @@ export default {
 }
 .Detail{
   background #eee
-  padding-bottom 1.33rem
+  height calc(100vh - 1.33rem)
+  overflow auto
 }
 </style>
