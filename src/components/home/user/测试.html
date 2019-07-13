@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+</head>
+<body>
+  <div>12345......</div>
+  <button>跑起来</button>
+  <script>
+    let div = document.querySelector('div')
+    let btn = document.querySelector('button')
+    console.log(btn)
+    let index = div.innerHTML.indexOf('.')
+    div.innerHTML = div.innerHTML.slice(0,index)
+    // btn.onclick = ()=>{
+    let i = 0
+    setInterval(()=>{
+      i++
+      div.innerHTML = div.innerHTML + '.'
+      if(i > 6){
+        div.innerHTML = div.innerHTML.slice(0, index)
+        i = 0
+      }
+    },500)
+      // console.log(div.innerHTML.slice(0,-2))
+    // }
+  </script>
+</body>
+</html>

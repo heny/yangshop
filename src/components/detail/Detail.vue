@@ -17,7 +17,7 @@
       <div class="title-top">
         <h2>{{list.name}}</h2>
         <div class="like">
-          <i :class="['iconfont',{'icon-start':!like},{'icon-start1':like}]" @click='like=!like'></i>
+          <i :class="['iconfont',{'icon-start':!like},{'icon-start1':like}]" @click='likes'></i>
           <h4>收藏</h4>
         </div>
       </div>
@@ -100,10 +100,12 @@
   </div>
 </template>
 <script>
+import { Toast } from 'mint-ui'
 export default {
   name: 'Detail',
   data () {
     return {
+      islogin: false,
       like: false,  // 收藏按钮
       sha: false, // 点击购买跳出
       deta: true,  // tab切换
@@ -128,6 +130,12 @@ export default {
       this.list = res.data.data;
       this.buylist = this.list.buyerReviews  // 循环评价;
     })
+    // 判断是否有登录
+    if(localStorage.user){
+      this.islogin = true
+    }else{
+      this.islogin = false
+    }
   },
   methods: {
     add (result) {
@@ -135,17 +143,50 @@ export default {
     },
     startBuy () {
       this.sha=true
-      if(this.buy.num){
-        let obj = {
-          num: this.buy.num,
-          cid: this.list.cid,
-          name: this.list.name,
-          img: this.list.swiperImgArr[0],
-          sprice: Number(this.list.reduct_price),
-          flag: true
+      if(this.islogin){
+        if(this.buy.num){
+          let obj = {
+            pid: this.list.pid,
+            cid: this.list.cid,
+            num: this.buy.num,
+            flag: true,
+            name: this.list.name,
+            img: this.list.swiperImgArr[0],
+            sprice: Number(this.list.reduct_price)
+          }
+          Toast({
+            message: '操作成功',
+            iconClass: 'icon-success1f iconfont'
+          })
+          this.sha = false
+          this.buy.num = 0
+          this.$store.commit('setList', obj)
         }
-        this.$store.commit('setList', obj)
-        // this.$router.push('/home/cart')
+      } else {
+        if(this.buy.num){
+          this.sha = false
+          this.buy.num = 0
+          Toast({
+            message: '您还没有登录呢,请先登录',
+            iconClass: 'icon-d iconfont'
+          })
+        }
+      }
+    },
+    likes () {
+      if(this.islogin){
+        this.like=!this.like
+        if(this.like){
+          Toast({
+            message: '收藏成功',
+            iconClass: 'icon-success1f iconfont'
+          })
+        }
+      } else {
+        Toast({
+          message: '您还没有登录呢,请先登录',
+          iconClass: 'icon-d iconfont'
+        })
       }
     }
   }

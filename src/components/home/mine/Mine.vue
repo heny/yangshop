@@ -1,17 +1,17 @@
 <template>
   <div class="Mine">
     <div class="top">
-      <i class="iconfont icon-set"></i>
+      <i class="iconfont icon-set" @click='logOut'></i>
       <h2>个人中心</h2>
-      <i class="iconfont icon-msg"><b class="bdage">9+</b></i>
+      <i class="iconfont icon-msg"><b class="bdage" v-show='message!=0'>{{message >= 10 ? '9+' : message}}</b></i>
       <div class="header" @click='skip'>
-        <div class="img"></div>
+        <div class="img"><img src="../../../assets/image/mime/header.jpg" alt="" v-show='isLogin'></div>
       </div>
     </div>
     <div class="like">
-      <div class="links"><router-link to="/login">点击登录</router-link></div>
+      <div class="links"><router-link to="/login">{{user}}</router-link></div>
       <div class="likes">
-        <router-link to="like"><img src='../../../assets/image/mime/keep.png'>我的收藏 <i v-show='isLogin'>(5)</i></router-link>
+        <router-link to="like"><img src='../../../assets/image/mime/keep.png'>我的收藏 <i v-show='likes!=0'>({{likes}})</i></router-link>
       </div>
     </div>
     <div class="order">
@@ -22,7 +22,7 @@
       <ul class="orderB">
         <li v-for='(item,index) in orderList' :key='index'>
           <router-link :to="item.path">
-            <b class="bdage" v-if='item.num!=0'>{{item.num}}</b>
+            <b class="bdage" v-show='item.num!=0'>{{item.num}}</b>
             <img :src="item.img" alt="">
             <p>{{item.name}}</p>
           </router-link>
@@ -35,22 +35,50 @@
   </div>
 </template>
 <script>
+import { Toast,MessageBox } from 'mint-ui'
 export default {
   name: 'Mine',
   data () {
     return {
-      isLogin: true,
+      isLogin: false,
       orderList: [
         {path: 'payment', name: '待付款', img:require('@/assets/image/mime/icon_boligation.png'), num: 0},
         {path: 'shipments', name: '待发货', img:require('@/assets/image/mime/prepare.png'), num: 0},
         {path: 'take', name: '待收货', img:require('@/assets/image/mime/icon_consignee.png'), num: 0},
         {path: 'evaluate', name: '待评价', img:require('@/assets/image/mime/icon_evaluate.png'), num: 0},
         {path: 'refund', name: '退款售后', img:require('@/assets/image/mime/icon_refund.png'), num: 0}
-      ]
+      ],
+      message: 0,
+      likes: 0,
+      user: '点击登录'
+    }
+  },
+  mounted () {
+    if(localStorage.user){
+      this.user = localStorage.user
+      this.isLogin = true
     }
   },
   methods: {
+    logOut () {
+      MessageBox.confirm('确定要退出么?').then(action => {
+        console.log(action)
+        if(action){
+          delete localStorage.user
+          this.isLogin = false
+          this.user = '点击登录'
+        }
+      })
+    },
     skip () {
+      if(localStorage.user){
+        Toast({
+          message: '已经登录了',
+          duration: 3000,
+          iconClass: 'icon-d iconfont'
+        })
+        return
+      }
       this.$router.push('/login')
     }
   }
@@ -186,6 +214,10 @@ vendor(prop,args){
       height 2.41rem
       vendor(border-radius,50%)
       background #e6dfdf
+      img{
+        width 100%
+        border-radius 50%
+      }
     }
   }
 }

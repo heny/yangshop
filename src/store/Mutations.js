@@ -13,14 +13,26 @@ export default {
         state.list = JSON.parse('[' + localStorage.list + ']')
       }
     }
-
+    
     // 循环删除重复的值;
     state.list.map((item,index)=>{
       if(item.cid === newVal.cid){
         state.list.splice(index,1)
       }
     })
-    state.list.push(newVal)
+  // 将值添加进vuex
+    state.list.unshift(newVal)
     localStorage.list = JSON.stringify(state.list)
+  },
+  delList (state, newVal) {
+    // 删除localStorage的数据
+    let arr = JSON.parse(localStorage.list)
+    arr.map((item,index)=>{
+      if(item.cid === newVal){
+        arr.splice(index,1)
+      }
+    })
+    // 将本地管理数据存入
+    localStorage.list = JSON.stringify(arr)
   }
 }

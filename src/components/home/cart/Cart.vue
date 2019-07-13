@@ -7,7 +7,7 @@
     <div class="noneShop" v-if="!islogin">
       <div>
         <i class="icon-cart iconfont shops"></i>
-        <p>购物车还是空的<br>快去逛逛吧~</p>
+        <p v-html="msg"></p>
       </div>
     </div>
     <div class="shoped" v-if='islogin'>
@@ -18,22 +18,22 @@
             <span>杭州保税区仓</span>
           </div>
           <div class="main">
-            <div class="chek" v-show='!edit'><input type="checkbox"></div>
-            <div class="img"><img src="" alt=""></div>
+            <div class="chek" v-show='!edit'><input type="checkbox" v-model='item.flag'></div>
+            <div class="img"><img :src="item.img" alt="" @click='$router.push("/detail/"+item.pid)'></div>
             <div class="desc">
               <h2>{{item.name}}</h2>
-              <button @click='num-- && num>0'>-</button><i class="center">{{item.num}}</i><button @click='num++'>+</button>
+              <button @click='item.num-- && item.num>0' :disabled='item.num==0'>-</button><i class="center">{{item.num}}</i><button @click='item.num++'>+</button>
             </div>
             <div class="price">￥{{item.sprice*item.num}}</div>
             <transition enter-active-class="animated fadeInRight faster" leave-active-class="animated fadeOutRight faster">
-              <div class="btn" v-show='edit'>删除</div>
+              <div class="btn" v-show='edit' @click='del(item.cid)'>删除</div>
             </transition>
           </div>
         </li>
       </ul>
       <div class="bottoms">
         <div class="chekAll">
-          <input type="checkbox" name="all" id="">
+          <input type="checkbox" name="all" id="" v-model='chekAll' @click='cAll'>
           <p>全选</p>
         </div>
         <div class="chekAll">
@@ -44,36 +44,95 @@
           <p>合计:{{priceAll}}.00</p>
           <p>(不含运费)</p>
         </div>
-        <button>去结算</button>
+        <button @click='figure'>去结算</button>
       </div>
     </div>
   </div>
 </template>
 <script>
+import { Toast } from 'mint-ui'
 export default {
   name: 'Cart',
   data () {
     return {
-      islogin: true,
+      islogin: false,
       edit: false,
       list: '',
-      priceAll: 0
+      priceAll: 0,
+      chekAll: true,
+      msg: ''
     }
   },
   mounted () {
-    if(localStorage.list){
-      this.list = JSON.parse(localStorage.list)
-      this.islogin = true;
-      this.list.forEach((item,index)=>{
-        this.priceAll += item.num*item.sprice
-      })
+    // 判断有没有登录
+    if(localStorage.user){
+      this.islogin = true
+      // 判断购物车有没有东西;
+      if(localStorage.list && localStorage.list !== '[]'){
+        this.list = JSON.parse(localStorage.list)
+      } else {
+        this.msg = '购物车还是空的<br>快去逛逛吧~'
+        this.islogin = false
+      }
     } else {
-      this.islogin = false;
+      this.msg = '您还没有登录的呢<br>快去登录吧~'
+    }
+  },
+  watch: {
+    list: {
+      deep: true,
+      handler(val){
+        let arr = val.filter(item=>item.flag) // 将false的过滤掉
+        // 计算总价
+        let num = 0
+        arr.forEach((item,index)=>{
+          num += item.num*item.sprice
+        })
+        this.priceAll = num
+        
+        this.chekAll = arr.length === val.length // 当true的长度相当时，则全选亮
+        // 改变本地存储的值
+        this.$nextTick(()=>{
+          localStorage.list = JSON.stringify(val)
+        })
+      }
+    }
+  },
+  methods: {
+    del (cid) {
+      // 调用删除方法
+      this.$store.commit('delList', cid)
+      // 实时更新;
+      this.list.map((item,index) => {
+        if(item.cid === cid){
+          this.list.splice(index,1)
+        }
+      })
+      // 判断localStorage里面是否有数据;
+      if(localStorage.list === '[]'){
+        this.islogin = false
+        this.msg = '购物车还是空的<br>快去逛逛吧~'
+      }
+    },
+    cAll () {
+      // 因为直接等于会发生改变，所以需要取反;
+      this.chekAll = !this.chekAll
+      this.list.map(item=>item.flag = this.chekAll)
+    },
+    figure () {
+      Toast({
+        message: '操作成功',
+        iconClass: 'icon-success1f iconfont'
+      })
     }
   }
 }
 </script>
 <style lang="stylus" scoped>
+.cart{
+  width 100vw
+  overflow hidden
+}
 .top{
   width 100%
   height 1.88rem
@@ -204,7 +263,6 @@ export default {
           padding-top .03rem
           box-sizing border-box
           margin-right .28rem
-          background red
         }
         img{
           width 2.09rem
@@ -240,6 +298,7 @@ export default {
         .price{
           padding .83rem 0 0 .2rem
           font-size 20px
+          width .7rem*2
         }
         .btn{
           width 1.31rem

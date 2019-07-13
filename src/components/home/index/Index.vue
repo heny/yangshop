@@ -44,7 +44,6 @@ export default {
   },
   methods: {
     skip (num) {
-      console.log(num)
       this.$router.push('/detail/' + num)
     }
   },
@@ -70,7 +69,8 @@ vendor(prop,args){
 
 .top {
   height 6.95rem
-  background #fa4071
+  background url('../../../assets/image/home/banner.jpg') no-repeat
+  background-size 100% 
   padding-top .88rem
   box-sizing border-box
   display flex
@@ -128,7 +128,6 @@ dl {
         img{
           width 100%;
           height 4.37rem
-          background yellow
         }
         .bottom{
           padding 0 .27rem

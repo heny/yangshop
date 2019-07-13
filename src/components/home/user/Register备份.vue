@@ -6,26 +6,17 @@
       <router-link to="/login">登录</router-link>
     </div>
     <div class="body">
-      <h2>手机号:<i class="reg">{{checks.phoneregs ? '' : '手机号输入不正确'}}</i></h2>
-      <input type="number" v-model.number='checks.phone' @blur='regPhone' placeholder="请输入正确的手机号码">
-      
-      <h2>密&nbsp;&nbsp;&nbsp;码:
-        <i class='reg'>{{checks.passregs ? '' : '密码输入不正确'}}</i>
-      </h2>
-      <input type="password" placeholder="密码必须为6-20字母大小写数字组合" v-model='checks.pass' @blur='regPass'>
-      
-      <h2>验证码: 
-        <a href="javascript:;" class="code" @click='getCode'>
-          <i v-show='!timerflag'>点击获取</i>
-          <i v-show='timerflag'>剩余{{timerCodes}}秒</i>
-        </a>
-      </h2>
-      <input type="text" v-model='checks.codeNum' :placeholder="timerflag ? '请输入随意4位数' : '点击获取验证码'">
+      <h2>手机号:<i class="reg">{{phoneregs ? '' : '手机号输入不正确'}}</i></h2>
+      <input type="number" v-model.number='phone' @blur='regPhone' placeholder="请输入正确的手机号码">
+      <h2>密&nbsp;&nbsp;&nbsp;码:<i class='reg'>{{passregs ? '' : '密码输入不正确'}}</i></h2>
+      <input type="password" placeholder="密码必须为6-20字母大小写数字组合" v-model='pass' @blur='regPass'>
+      <h2>验证码: <a href="javascript:;" class="code" @click='getCode'>{{'点击获取'}}</a></h2>
+      <input type="text">
       <button @click='nextlogin'>下一步</button>
       <label>
-        <i :class="[{'icon-check-box':!checks.check},{'icon-jd-check':checks.check},'iconfont']" @click='checks.check=!checks.check'></i>
+        <i :class="[{'icon-check-box':!check},{'icon-jd-check':check},'iconfont']" @click='check=!check'></i>
         我已阅读并同意使用<router-link to="">条款和隐私政策</router-link>
-        <input type="checkbox" v-model='checks.check'>
+        <input type="checkbox" v-model='check'>
       </label>
     </div>
     <Loading :title='title' v-show='loadding'></Loading>
@@ -37,20 +28,16 @@ export default {
   name: 'login',
   data () {
     return {
-      checks: {
-        check: true,
-        phone: '',
-        pass: '',
-        phoneregs: true,
-        passregs: true,
-        codeNum: ''
-      },
+      check: true,
+      phone: '',
+      pass: '',
+      phoneregs: true,
+      passregs: true,
       loadding: false, // 请求加载
       timer: null,
-      title: '请求中',
-      timerCode: null,   // 开启短信验证码倒计时
-      timerCodes: 5, // 倒计时数量
-      timerflag: false,
+      title: '请求中'
+      // timerCode: null,   // 开启短信验证码倒计时
+      // timerCodes: 5 // 倒计时数量
     }
   },
   methods: {
@@ -80,8 +67,8 @@ export default {
         }
       },500)
       let params = this.$qs.stringify({
-        phone: this.checks.phone,
-        password: this.checks.pass
+        phone: this.phone,
+        password: this.pass
       })
       this.$axios.post('/api/register',params).then(res => {
         this.loadding = false
@@ -89,12 +76,12 @@ export default {
         let msg = res.data.msg
         // 验证是否全部正确
         let arr = []
-        for(let i in this.checks){
-          arr.push(this.checks[i])
+        for(let i in this.$data){
+          arr.push(this.$data[i])
         }
         let bool = arr.filter(item=>Boolean(item))
-        // 如果6个全部正确
-        if(bool.length >= 6){
+        // 如果5个全部正确
+        if(bool.length >= 7){
           // 判断服务器返回数据是否已经注册;
           if(msg.includes('已注册')){
             Toast({
@@ -125,56 +112,26 @@ export default {
       let reg = /^1\d{10}$/
       // 二次点击绑定事件
       e.target.addEventListener('keyup',()=>{
-        this.checks.phoneregs = reg.test(this.checks.phone)
+        this.phoneregs = reg.test(this.phone)
       })
       // 判断失焦
-      this.checks.phoneregs = reg.test(this.checks.phone)
+      this.phoneregs = reg.test(this.phone)
     },
     regPass (e) {
       let reg = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,20}$/
       e.target.addEventListener('keyup',()=>{
-        this.checks.passregs = reg.test(this.checks.pass)
+        this.passregs = reg.test(this.pass)
       })
       // 判断失焦
-      this.checks.passregs = reg.test(this.checks.pass)
+      this.passregs = reg.test(this.pass)
     },
-    getCode (e) {
-      if(!this.timerflag){
-        clearInterval(this.timerCode)
-        // 循环进数组;
-        let arr = []
-        for(let i in this.checks){
-          arr.push(this.checks[i])
-        }
-        let bool = arr.filter(item=>Boolean(item))
-        // 判断前面有没有输入正确;
-        if(bool.length === 5){
-          // 开始计时
-          this.timerflag = true
-          this.timerCodes = 60
-          this.timerCode = setInterval(()=>{
-            this.timerCodes--
-            if(this.timerCodes <= 0){
-              this.timerflag = false
-              clearInterval(this.timerCode)
-              this.timerCodes = 60
-            }
-          },1000)
-          console.log(bool,'5个长度')
-        } else {
-          Toast({
-            message: '现在不能点击哦',
-            duration: 3000,
-            iconClass: 'iconfont icon-delete'
-          })
-        }
-      } else {
-        Toast({
-          message: '技能冷却中',
-          duration: 3000,
-          iconClass: 'iconfont icon-d'
-        })
+    getCode () {
+      let arr = []
+      for(let i in this.$data){
+        arr.push(this.$data[i])
       }
+      let bool = arr.filter(item=>Boolean(item))
+      console.log(bool)
     }
   }
 }

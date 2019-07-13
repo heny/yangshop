@@ -6,27 +6,111 @@
       <router-link to="/register">注册</router-link>
     </div>
     <div class="bodys">
-      <h2>手机号:</h2>
-      <input type="text">
-      <h2>密码:</h2>
-      <input type="text">
+      <h2>手机号: <i class="regs">{{phonemsg}}</i></h2>
+      <input type="text" v-model='phone' @focus='phonemsg =""'>
+      <h2>密码: <i class="regs">{{passmsg}}</i></h2>
+      <input type="password" v-model='pass' @focus='passmsg =""'>
       <p><router-link to="">忘记密码</router-link></p>
-      <button>登录</button>
+      <button @click='goShop'>登录</button>
     </div>
+    <Loading :title='title' v-show='loadding'></Loading>
   </div>
 </template>
 <script>
+import { Toast } from 'mint-ui'
 export default {
-  name: 'login'
+  name: 'login',
+  data () {
+    return {
+      phone: '',
+      pass: '',
+      phonemsg: '',
+      passmsg: '',
+      loadding: false,
+      timer: null,
+      title: '请求中'
+    }
+  },
+  methods: {
+    goShop () {
+      this.loadding = true
+      let figurenum=20;
+      let indexnum = 0;
+      this.title = '请求中'
+      this.timer = setInterval(()=>{
+        figurenum--
+        indexnum++
+        this.title = this.title+'.'
+        if(indexnum > 6){
+          this.title = '请求中'
+          indexnum = 0
+        }
+        if(figurenum <= 0){
+          clearInterval(this.timer)
+          Toast({
+            message: '请求超时',
+            duration: 3000,
+            iconClass: 'iconfont icon-d'
+          })
+          this.loadding = false
+        }
+      },500)
+      this.$axios.get('/api/login',{params:{
+        phone: this.phone,
+        password: this.pass
+      }}).then(res => {
+        this.loadding = false  // 关闭loadding
+        clearInterval(this.timer)  // 清除定时器
+        if(res.data.status === 0){
+          if(res.data.msg.includes('密码')){
+            this.passmsg = res.data.msg
+          } else if(res.data.msg.includes('注册')){
+            this.phonemsg = res.data.msg
+          }
+        } else if (res.data.status === 1){
+          Toast({
+            message: '登录成功',
+            iconClass: 'icon-success1f iconfont'
+          })
+          this.passmsg = ''
+          localStorage.user = this.phone
+          this.$router.push('/home/mine')
+        }else{
+          Toast({
+            message: '现在还不能点击哦',
+            duration: 3000,
+            iconClass: 'iconfont icon-delete'
+          })
+        }
+      })
+    }
+  }
 }
 </script>
 <style lang="stylus" scoped>
+.loading{
+  position fixed
+  top 50%
+  left 50%
+  transform translate(-50%,-50%)
+  z-index 9999
+  font-size 18px
+  width 4rem
+  height 3.5rem
+  border-radius 8px
+  border 2px solid #ccc
+  display grid
+  place-items center
+  background rgba(0,0,0,.5)
+}
+.regs {
+  color red
+}
 .bodys{
   padding 2.53rem 1rem 0
   h2{
     font-size 22px
     margin-top .75rem
-    width 2rem
   }
   input{
     width 100%
